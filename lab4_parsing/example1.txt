@@ -1,0 +1,49 @@
+[NODE]
+{% boolean result;
+   boolean isEmpty = false;
+ %}
+
+[LEXER]
+or      : 'or';
+openBr  : '\(';
+closeBr : '\)';
+not     :  'not';
+and     :  'and';
+xor     :  'xor';
+value     :  'true|false';
+
+[GRAMMAR=OR]
+OR   : XOR OR_ {%
+    if (!$2.isEmpty) {
+       $0.result = $1.result || $2.result;
+    } else $0.result = $1.result;
+%};
+OR_  : or XOR OR_ {%
+      if (!$3.isEmpty) {
+          $0.result = $2.result || $3.result;
+      } else $0.result = $2.result;
+      %}
+      | EPS {% $0.isEmpty = true; %};
+XOR  : AND XOR_ {%
+    if (!$2.isEmpty) {
+        $0.result = $1.result != $2.result;
+    } else $0.result = $1.result;
+    %};
+XOR_ : xor AND XOR_ {%
+    if (!$3.isEmpty) {
+        $0.result = $2.result != $3.result;
+    } else $0.result = $2.result;
+    %} | EPS {% $0.isEmpty = true; %};
+AND  : TERM AND_ {%
+    if (!$2.isEmpty) {
+        $0.result = $1.result && $2.result;
+    } else $0.result = $1.result;
+    %};
+AND_ : and TERM AND_ {%
+    if (!$3.isEmpty) {
+        $0.result = $2.result && $3.result;
+    } else $0.result = $2.result;
+    %} | EPS {% $0.isEmpty = true; %};
+TERM : value {% $1.result = $1.value.equals("true"); $0.result = $1.result; %} |
+       openBr OR closeBr {% $0.result = $2.result; %} |
+       not TERM {% $0.result = !$2.result; %};2

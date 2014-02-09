@@ -1,0 +1,70 @@
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.*;
+
+public class %sParser {
+
+    static public class Node {
+            List<Node> children;
+            String name;
+            String value;
+
+            //  User fields
+            %s
+            //
+
+            public Node(String name, String value) {
+                this.value = value;
+                this.name = name;
+                this.children = new ArrayList<Node>();
+            }
+
+            void addNode(Node node) {
+                children.add(node);
+            }
+
+            @Override
+            public String toString() {
+                return name + " -> [" + StringUtils.join(children, ", ") + "]";
+            }
+    }
+
+    public %sParser(List<Lexem> lexems) {
+        final ArrayList<Lexem> newLexems = new ArrayList<Lexem>(lexems);
+        newLexems.add(Lexem.END_LEXEM);
+        this.lexems = newLexems.iterator();
+        currentLexem = this.lexems.next();
+    }
+
+
+    Iterator<Lexem> lexems;
+    Lexem currentLexem;
+    Set<String> terminals = new HashSet<String>(Arrays.asList("or", "openBr", "closeBr", "not", "and", "xor", "var", "EPS"));
+    Set<String> nonTerminals = new HashSet<String>(Arrays.asList("OR", "OR_", "XOR", "XOR_", "AND", "AND_", "TERM"));
+
+    // SETS Set<String> MAINSet = new HashSet<String>(Arrays.asList("not", "openBr", "var", "END"));
+    %s
+    // END OF SETS
+
+    // BEGIN OF NODES
+    %s
+    // END OF NODES
+
+    private Node test(String value, Node node) {
+            if (currentLexem.name.equals(value)) {
+                try {
+                    node.name = value;
+                    node.value = currentLexem.value;
+                    currentLexem = lexems.next();
+                    return node;
+                }
+                catch (NoSuchElementException e) {
+                    throw new UnexpectedEndException();
+                }
+
+            } else
+                throw new UnexpectedLexemException(new HashSet<String>(Arrays.asList(value)), currentLexem.value);
+    }
+
+
+}
